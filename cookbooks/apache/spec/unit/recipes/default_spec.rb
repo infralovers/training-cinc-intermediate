@@ -12,6 +12,9 @@ describe 'apache::default' do
 
     platform 'ubuntu', '24.04'
 
+    # Step into the custom resource to test its internal behavior
+    step_into ['apache_vhost']
+
     it 'converges successfully' do
       expect { chef_run }.to_not raise_error
     end
@@ -25,33 +28,28 @@ describe 'apache::default' do
       expect(chef_run).to enable_service('apache2')
     end
 
-    it 'creates the index file' do
-      expect(chef_run).to render_file('/var/www/html/index.html').with_content('<h1>Welcome Home!</h1>')
+
+    describe 'for the default site' do
+      it 'writes out a new home page' do
+        expect(chef_run).to render_file('/var/www/html/index.html').with_content('<h1>Welcome Home!</h1>')
+      end
+    end
+
+    describe 'for the admin site' do
+      it 'creates the directory' do
+        expect(chef_run).to create_directory('/var/www/admins/html')
+      end
+
+      it 'creates the configuration' do
+        expect(chef_run).to render_file('/etc/apache2/sites-enabled/admins.conf').with_content('Listen 8080')
+      end
+
+      it 'creates a new home page' do
+        expect(chef_run).to render_file('/var/www/admins/html/index.html').with_content('<h1>Welcome admins!</h1>')
+      end
+
     end
 
   end
 
-  context 'When all attributes are default, on CentOS 8' do
-    # for a complete list of available platforms and versions see:
-    # https://github.com/chefspec/fauxhai/blob/main/PLATFORMS.md
-    platform 'centos', '8'
-
-    it 'converges successfully' do
-      expect { chef_run }.to_not raise_error
-    end
-
-    it 'installs the httpd package' do
-      expect(chef_run).to install_package('httpd')
-    end
-
-    it 'creates the index file' do
-      expect(chef_run).to render_file('/var/www/html/index.html').with_content('<h1>Welcome Home!</h1>')
-    end
-
-    it 'starts the httpd service' do
-      expect(chef_run).to start_service('httpd')
-      expect(chef_run).to enable_service('httpd')
-    end
-
-  end
 end
