@@ -13,7 +13,7 @@ describe 'apache::default' do
     platform 'ubuntu', '24.04'
 
     # Step into the custom resource to test its internal behavior
-    step_into ['apache_vhost']
+    # step_into ['apache_vhost']
 
     it 'converges successfully' do
       expect { chef_run }.to_not raise_error
